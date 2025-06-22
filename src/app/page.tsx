@@ -9,15 +9,21 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Send, Wrench, User } from 'lucide-react';
+import { MarkdownRenderer } from '@/components/markdown-renderer';
 
 export default function Chat() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
   const [isTyping, setIsTyping] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
+    if (viewportRef.current) {
+      console.log('ViewportRef:', viewportRef.current, 'scrollHeight:', viewportRef.current.scrollHeight, 'scrollTop:', viewportRef.current.scrollTop);
+      viewportRef.current.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'smooth' });
+    }
+    if (endOfMessagesRef.current) {
+      endOfMessagesRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
@@ -47,13 +53,13 @@ export default function Chat() {
         </div>
       </header>
       <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="container mx-auto px-4 py-6 max-w-4xl flex-1 flex flex-col">
-          <Card className="w-full flex flex-col flex-1">
+        <div className="container mx-auto px-4 py-6 max-w-4xl flex-1 flex flex-col min-h-0">
+          <Card className="w-full flex flex-col flex-1 min-h-0">
             <CardHeader className="border-b bg-muted/50">
               <CardTitle className="text-lg">Chat with Mechanic AI</CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden p-0">
-              <ScrollArea className="h-full" ref={scrollAreaRef}>
+            <CardContent className="flex-1 flex flex-col min-h-0 p-0">
+              <ScrollArea className="flex-1 min-h-0 h-0" viewportRef={viewportRef}>
                 <div className="p-6 space-y-6">
                   {messages.length === 0 && (
                     <div className="text-center py-12">
@@ -98,7 +104,7 @@ export default function Chat() {
                           {message.parts.map((part, i) => {
                             switch (part.type) {
                               case 'text':
-                                return <div key={`${message.id}-${i}`}>{part.text}</div>;
+                                return <MarkdownRenderer key={`${message.id}-${i}`} content={part.text} />;
                               default:
                                 return null;
                             }
@@ -136,6 +142,7 @@ export default function Chat() {
                     </div>
                   )}
                 </div>
+                <div ref={endOfMessagesRef} />
               </ScrollArea>
             </CardContent>
             <div className="border-t p-4 bg-background">
